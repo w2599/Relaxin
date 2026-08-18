@@ -47,8 +47,12 @@ void JBLogDebugFunction(const char *format, ...)
 
 void JBLogErrorFunction(const char *format, ...)
 {
+#if DEBUG
     va_list args;
     va_start(args, format);
     systemhook_vlog(LOG_ERR, format, args);
     va_end(args);
+#else
+    (void)format;
+#endif
 }
