@@ -92,8 +92,12 @@ void JBLogDebugFunction(const char *format, ...) {
 }
 
 void JBLogErrorFunction(const char *format, ...) {
+#if DEBUG
     va_list arguments;
     va_start(arguments, format);
     JBLogV(JBLogGetErrorLogFilePath(), "ERROR", format, arguments);
     va_end(arguments);
+#else
+    (void)format;
+#endif
 }
