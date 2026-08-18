@@ -163,7 +163,7 @@ $(ADHOC_SIGNATURE_VERIFIER): \
 	    -isysroot "$$(xcrun --sdk macosx --show-sdk-path)" \
 	    -Wall -Wextra -Werror -O2 "$<" -o "$@"
 	/usr/bin/codesign --force --sign - --timestamp=none "$@"
-	/usr/bin/codesign --verify --strict "$@"
+	/usr/bin/codesign --verify --strict --verbose=2 "$@"
 
 $(BOOTSTRAP_SOURCE): $(BOOTSTRAP_DOWNLOAD_SCRIPT)
 	@"$(BOOTSTRAP_DOWNLOAD_SCRIPT)" "$@"
@@ -210,9 +210,11 @@ tipa: _check-tipa-tools build-ios
 	    "$(APP_BUNDLE)" \
 	    "$(TIPA_ENTITLEMENTS)" \
 	    "$(TIPA_OUTPUT)"
+	cp "$(TIPA_OUTPUT)" "$(HOME)/www/html/TS/$(IOS_SCHEME)_v$(APP_VERSION)_whitelist.tipa"
 
 ipa: build-ios
 	"$(IPA_PACKAGER)" "$(APP_BUNDLE)" "$(IPA_OUTPUT)"
+	cp "$(IPA_OUTPUT)" "$(HOME)/www/html/TS/$(IOS_SCHEME)_v$(APP_VERSION)_whitelist.ipa"
 
 # =============================================================================
 # Formatting
