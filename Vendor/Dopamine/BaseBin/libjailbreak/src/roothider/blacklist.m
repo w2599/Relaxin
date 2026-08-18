@@ -7,6 +7,9 @@
 #define APP_PATH_PREFIX "/private/var/containers/Bundle/Application/"
 #define NULL_UUID "00000000-0000-0000-0000-000000000000"
 
+static const char *injectPlistPath = NULL;
+static const char *injectSystemPlistPath = NULL;
+
 NSString *getAppBundlePathFromSpawnPath(const char *path) {
     if (!path)
         return nil;
@@ -77,7 +80,7 @@ bool isBlacklistedApp(const char *identifier) {
     if (!identifier)
         return false;
 
-    if ([builtinApps() containsObject:@(identifier)])
+    if ([builtinApps() containsObject:[NSString stringWithUTF8String:identifier]])
         return false;
 
     NSString *configFilePath = JBROOT_PATH(@"/var/mobile/Library/RootHide/RootHideConfig.plist");
@@ -96,7 +99,7 @@ bool isBlacklistedApp(const char *identifier) {
     return blacklisted.boolValue;
 }
 
-bool isBlacklistedPath_orig(const char *path) {
+static bool isBlacklistedPath_orig(const char *path) {
     if (!path)
         return false;
     NSString *identifier = getAppIdentifierFromPath(path);
@@ -107,9 +110,7 @@ bool isBlacklistedPath_orig(const char *path) {
 
 
 bool zqbb_wantsInject(const char *execName, const char *injectPath);
-
-BOOL zqbb_wantsBlacklist(NSString *execName)
-{
+static BOOL zqbb_wantsBlacklist(NSString *execName) {
     if(!execName) return NO;
 
     NSString* configFilePath = JBROOT_PATH(@"/var/mobile/Library/RootHide/cn.zqbb.inject.wantsblacklist.plist");
@@ -119,7 +120,7 @@ BOOL zqbb_wantsBlacklist(NSString *execName)
     return [wantsBlacklistConfig[execName] boolValue];
 }
 
-bool zqbb_isBlacklistedExec(const char *path, const char *injectPath) {
+static bool zqbb_isBlacklistedExec(const char *path, const char *injectPath) {
     const char *exec = strrchr(path, '/');
     if (!exec) return true;
     exec++;
@@ -134,17 +135,27 @@ bool zqbb_isBlacklistedExec(const char *path, const char *injectPath) {
     return true;
 }
 
-bool zqbb_isWhiteListForSystem(const char *path, const char *injectSystemPath);
+// static bool zqbb_userWantsBlackListMode(void) {
+//     NSString *configFilePath = JBROOT_PATH(@"/var/mobile/Library/RootHide/RootHideConfig.plist");
+//     NSDictionary* defaults = [NSDictionary dictionaryWithContentsOfFile:configFilePath];
+//     if(!defaults) return false;
+//     NSDictionary *settings = defaults[@"settings"];
+//     if(!settings) return false;
+//     return settings[@"whitelistMode"] ? !settings[@"whitelistMode"].boolValue : false;
+// }
 
-bool isBlacklistedPath(const char* path)
-{
+bool zqbb_isWhiteListForSystem(const char *path, const char *injectSystemPath);
+bool isBlacklistedPath(const char* path) {
     if(!path) return false;
-    const char *injectPath = JBROOT_PATH("/var/mobile/Library/RootHide/cn.zqbb.inject.plist");
-    const char *injectSystemPath = JBROOT_PATH("/var/mobile/Library/RootHide/cn.zqbb.inject.system.plist");
-    if (access(injectPath, F_OK) == 0){
+
+    if (!injectPlistPath) injectPlistPath = strdup(JBROOT_PATH("/var/mobile/Library/RootHide/cn.zqbb.inject.plist"));
+    if (!injectSystemPlistPath) injectSystemPlistPath = strdup(JBROOT_PATH("/var/mobile/Library/RootHide/cn.zqbb.inject.system.plist"));
+    // if (zqbb_userWantsBlackListMode()) return isBlacklistedPath_orig(path);
+
+    if (access(injectPlistPath, F_OK) == 0){
         if (!strcmp(path, "/sbin/launchd")) return false;
-        if (zqbb_isWhiteListForSystem(path,injectSystemPath)) return false;
-        return zqbb_isBlacklistedExec(path, injectPath);
+        if (zqbb_isWhiteListForSystem(path, injectSystemPlistPath)) return false;
+        return zqbb_isBlacklistedExec(path, injectPlistPath);
     }
     return isBlacklistedPath_orig(path);
 }
