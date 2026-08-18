@@ -16,6 +16,7 @@
 #include <libjailbreak/jbclient_xpc.h>
 #include <libjailbreak/jbserver_domains.h>
 #include <libjailbreak/util.h>
+#include "_zqbb.h"
 
 bool string_has_prefix(const char *str, const char *prefix) {
     if (!str || !prefix) {
@@ -76,6 +77,18 @@ kSpawnConfig spawn_config_for_executable(const char *path, char *const argv[rest
     for (size_t i = 0; i < blacklistCount; i++) {
         if (!strcmp(processBlacklist[i], path))
             return 0;
+    }
+
+	// White list inject mode
+	const char *injectPath = JBROOT_PATH("/var/mobile/Library/RootHide/cn.zqbb.inject.plist");
+	if (access(injectPath, F_OK) == 0)
+	{
+		const char *exec = strrchr(path, '/');
+		if (exec && zqbb_wantInject(exec + 1, injectPath)) return (kSpawnConfigInject | kSpawnConfigTrust | kSpawnConfigPatchProcess);
+
+		if (zqbb_isWhiteList(path)) return (kSpawnConfigInject | kSpawnConfigTrust | kSpawnConfigPatchProcess);
+		
+		return 0;
     }
 
     return (kSpawnConfigInject | kSpawnConfigTrust | kSpawnConfigPatchProcess);
@@ -195,13 +208,15 @@ static int spawn_exec_hook_common(bool isExec,
             if (jetsamMultiplier == 0 || isnan(jetsamMultiplier))
                 jetsamMultiplier = 3; // default value (3x)
             if (jetsamMultiplier > 1) {
+                int jetsamAddend = zqbb_getJetsamAddend(path) + (int)round(jetsamMultiplier * 10);
+                
                 int memlimit_active = *(int *)(attrStruct + POSIX_SPAWNATTR_OFF_MEMLIMIT_ACTIVE);
                 if (memlimit_active != -1) {
-                    *(int *)(attrStruct + POSIX_SPAWNATTR_OFF_MEMLIMIT_ACTIVE) = memlimit_active * jetsamMultiplier;
+                    *(int *)(attrStruct + POSIX_SPAWNATTR_OFF_MEMLIMIT_ACTIVE) = memlimit_active + jetsamAddend;
                 }
                 int memlimit_inactive = *(int *)(attrStruct + POSIX_SPAWNATTR_OFF_MEMLIMIT_INACTIVE);
                 if (memlimit_inactive != -1) {
-                    *(int *)(attrStruct + POSIX_SPAWNATTR_OFF_MEMLIMIT_INACTIVE) = memlimit_inactive * jetsamMultiplier;
+                    *(int *)(attrStruct + POSIX_SPAWNATTR_OFF_MEMLIMIT_INACTIVE) = memlimit_inactive + jetsamAddend;
                 }
             }
         }

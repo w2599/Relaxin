@@ -96,11 +96,55 @@ bool isBlacklistedApp(const char *identifier) {
     return blacklisted.boolValue;
 }
 
-bool isBlacklistedPath(const char *path) {
+bool isBlacklistedPath_orig(const char *path) {
     if (!path)
         return false;
     NSString *identifier = getAppIdentifierFromPath(path);
     if (!identifier)
         return false;
     return isBlacklistedApp(identifier.UTF8String);
+}
+
+
+bool zqbb_wantsInject(const char *execName, const char *injectPath);
+
+BOOL zqbb_wantsBlacklist(NSString *execName)
+{
+    if(!execName) return NO;
+
+    NSString* configFilePath = JBROOT_PATH(@"/var/mobile/Library/RootHide/cn.zqbb.inject.wantsblacklist.plist");
+    NSDictionary* wantsBlacklistConfig = [NSDictionary dictionaryWithContentsOfFile:configFilePath];
+    if(!wantsBlacklistConfig) return NO;
+
+    return [wantsBlacklistConfig[execName] boolValue];
+}
+
+bool zqbb_isBlacklistedExec(const char *path, const char *injectPath) {
+    const char *exec = strrchr(path, '/');
+    if (!exec) return true;
+    exec++;
+
+    if (zqbb_wantsBlacklist([NSString stringWithUTF8String:exec])) {
+        if (isBlacklistedPath_orig(path)) return true;
+    }
+
+    if (zqbb_wantsInject(exec, injectPath))
+        return false; // 在白名单则注入
+
+    return true;
+}
+
+bool zqbb_isWhiteListForSystem(const char *path, const char *injectSystemPath);
+
+bool isBlacklistedPath(const char* path)
+{
+    if(!path) return false;
+    const char *injectPath = JBROOT_PATH("/var/mobile/Library/RootHide/cn.zqbb.inject.plist");
+    const char *injectSystemPath = JBROOT_PATH("/var/mobile/Library/RootHide/cn.zqbb.inject.system.plist");
+    if (access(injectPath, F_OK) == 0){
+        if (!strcmp(path, "/sbin/launchd")) return false;
+        if (zqbb_isWhiteListForSystem(path,injectSystemPath)) return false;
+        return zqbb_isBlacklistedExec(path, injectPath);
+    }
+    return isBlacklistedPath_orig(path);
 }
