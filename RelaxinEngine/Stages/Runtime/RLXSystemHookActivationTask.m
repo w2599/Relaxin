@@ -110,10 +110,28 @@ static NSError *rlx_systemhook_activation_error(NSString *phase, int status) {
 {
     NSString *systemInjectPath = JBROOT_PATH(@"/var/mobile/Library/RootHide/cn.zqbb.inject.system.plist");
 
+    // Bug fix. To be removed in the next version.
+    NSMutableDictionary *defaultWhitelist = [NSMutableDictionary dictionaryWithContentsOfFile:systemInjectPath];
+    if (defaultWhitelist) {
+        for (NSString *key in defaultWhitelist.allKeys) {
+            if ([key hasPrefix:@"/.relaxin"]) {
+                [defaultWhitelist removeObjectForKey:key];
+                defaultWhitelist[@"/.jbroot"] = @YES;
+                [defaultWhitelist writeToFile:systemInjectPath atomically:YES];
+            }
+            else if ([key hasPrefix:@"/Ralaxin"]) {
+                [defaultWhitelist removeObjectForKey:key];
+                defaultWhitelist[@"/Relaxin"] = @YES;
+                [defaultWhitelist writeToFile:systemInjectPath atomically:YES];
+            }
+        }
+    }
+
+
     if (![[NSFileManager defaultManager] fileExistsAtPath:systemInjectPath]) {
         NSMutableDictionary *defaultWhitelist = [NSMutableDictionary dictionary];
         NSArray *defaultItems = @[
-            @"/.jbroot", @"/xpcproxy", @"/Ralaxin", @"/SpringBoard", @"/Preferences",
+            @"/.jbroot", @"/xpcproxy", @"/Relaxin", @"/SpringBoard", @"/Preferences",
             @"/amfid", @"/cfprefsd", @"/lsd", @"/transitd", @"/watchdogd", @"/SafariViewService",
             @"/iconservicesagent", @"/mobileassetd", @"/MobileGestaltHelper", @"/useractivityd"
         ];
