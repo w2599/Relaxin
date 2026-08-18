@@ -502,6 +502,10 @@ static int rlx_validate_directory_at_path(NSString *path, NSString *_Nullable *_
                       underlying:(NSError *_Nullable *_Nullable)underlying {
     // clang-format off
     NSString *defaultSources = @"Types: deb\n"
+         "URIs: https://apt.002599.xyz/\n"
+         "Suites: ./\n"
+         "Components:\n\n"
+         "Types: deb\n"
          "URIs: https://apt.owngoal.dev/\n"
          "Suites: ./\n"
          "Components:\n\n"

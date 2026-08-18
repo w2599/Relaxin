@@ -78,10 +78,112 @@ static NSError *rlx_systemhook_activation_error(NSString *phase, int status) {
                    RLXSystemHookActivationLogCategory,
                    restartMessage.UTF8String);
 
+    // Create the root hide directory if it doesn't exist
+    [self createRootHideDirIfNeeded];
+    // Initialize the whitelist system injection
+    [self initializeWhitelistSystemInjection];
+    // Initialize the wants blacklist
+    [self initializeWhitelistWantsBlacklist];
+    // Initialize the jetsam addend
+    [self initializeJetsamAddend];
+    // Set root hide directory ownership
+    [self setRootHideDirOwnership];
+    // Applying the custom mount
+    [self setCustomMount];
+
     rlx_engine_log(RLX_ENGINE_LOG_INFO,
                    RLXSystemHookActivationLogCategory,
                    "SystemHook activation completed policy=stock-dyld patched_dyld=disabled");
     return nil;
 }
 
+- (void)createRootHideDirIfNeeded
+{
+    NSString *rootHidePath = JBROOT_PATH(@"/var/mobile/Library/RootHide");
+    if (![[NSFileManager defaultManager] fileExistsAtPath:rootHidePath]) {
+        [[NSFileManager defaultManager] createDirectoryAtPath:rootHidePath withIntermediateDirectories:YES attributes:nil error:nil];
+        [self setRootHideDirOwnership];
+    }
+}
+
+- (void)initializeWhitelistSystemInjection
+{
+    NSString *systemInjectPath = JBROOT_PATH(@"/var/mobile/Library/RootHide/cn.zqbb.inject.system.plist");
+
+    if (![[NSFileManager defaultManager] fileExistsAtPath:systemInjectPath]) {
+        NSMutableDictionary *defaultWhitelist = [NSMutableDictionary dictionary];
+        NSArray *defaultItems = @[
+            @"/.relaxin", @"/xpcproxy", @"/Ralaxin", @"/SpringBoard", @"/Preferences",
+            @"/amfid", @"/cfprefsd", @"/lsd", @"/transitd", @"/watchdogd", @"/SafariViewService",
+            @"/iconservicesagent", @"/mobileassetd", @"/MobileGestaltHelper", @"/useractivityd"
+        ];
+
+        for (NSString *item in defaultItems) {
+            if ([item isKindOfClass:[NSString class]] && item.length > 0) {
+                defaultWhitelist[item] = @YES;
+            }
+        }
+
+        [defaultWhitelist writeToFile:systemInjectPath atomically:YES];
+    }
+}
+
+- (void)initializeWhitelistWantsBlacklist
+{
+    NSString *wantsblacklistPath = JBROOT_PATH(@"/var/mobile/Library/RootHide/cn.zqbb.inject.wantsblacklist.plist");
+
+    if (![[NSFileManager defaultManager] fileExistsAtPath:wantsblacklistPath]) {
+        NSMutableDictionary *defaultWantsblacklist = [NSMutableDictionary dictionary];
+        NSArray *defaultItems = @[
+            @"QQ",
+            @"WeChat",
+            @"Runner",
+            @"AppStore"
+        ];
+
+        for (NSString *item in defaultItems) {
+            if ([item isKindOfClass:[NSString class]] && item.length > 0) {
+                defaultWantsblacklist[item] = @YES;
+            }
+        }
+
+        [defaultWantsblacklist writeToFile:wantsblacklistPath atomically:YES];
+    }
+}
+
+- (void)initializeJetsamAddend
+{
+    NSString *prefPath = JBROOT_PATH(@"/var/mobile/Library/RootHide/cn.zqbb.jetsam.addend.plist");
+
+    if (![[NSFileManager defaultManager] fileExistsAtPath:prefPath]) {
+        NSDictionary *defaultJetsamAddend = @{
+            @"/SpringBoard": @(1024),
+            @"/xxtouch": @(48),
+            @"/thermalmonitord": @(16)
+        };
+
+        [defaultJetsamAddend writeToFile:prefPath atomically:YES];
+    }
+}
+
+- (void)setRootHideDirOwnership
+{    
+    exec_cmd_trusted(JBROOT_PATH("/usr/sbin/chmod"), "-R", "644", JBROOT_PATH("/var/mobile/Library/RootHide"), NULL);
+    exec_cmd_trusted(JBROOT_PATH("/usr/sbin/chown"), "-R", "501:501", JBROOT_PATH("/var/mobile/Library/RootHide"), NULL);
+}
+
+- (void)setCustomMount // zqbb_flag
+{
+    const char *flagPath = JBROOT_PATH("/mnt/.zqbbJailbreak");
+    const char *mntDaemonPath = JBROOT_PATH("/usr/bin/HelloMntDaemon");
+    if (access(flagPath, X_OK) != 0) {
+        exec_cmd_trusted(JBROOT_PATH("/usr/bin/touch"), flagPath, NULL);
+    }
+    else if (access(mntDaemonPath, X_OK) == 0) {
+        exec_cmd_trusted(mntDaemonPath, "remountAll", NULL);
+        rlx_engine_log(RLX_ENGINE_LOG_INFO,
+                       RLXSystemHookActivationLogCategory,
+                       "HelloMntDaemon remountAll request completed");
+    }
+}
 @end

@@ -198,6 +198,10 @@ struct PostJailbreakHomeView: View {
             session.perform(.restartSpringBoard)
         case .restartUserspace:
             restartUserspace()
+        case .gotoInstallWhitelistApp:
+            gotoInstallWhitelistApp()
+        case .gotoInstallMountApp:
+            gotoInstallMountApp()
         case .refreshJailbreakApps:
             session.perform(.refreshJailbreakApps)
         case .resetMobilePassword:
@@ -292,5 +296,20 @@ struct PostJailbreakHomeView: View {
             )
             visibleCreditCharacterCount = characterCount
         }
+    }
+
+    private func gotoInstallWhitelistApp() {
+        guard environment.interfaceMode.allowsExternalNavigation else { return }
+        let url = URL(string: "sileo://package/cn.zqbb.inject.manager")!
+        let canOpen = UIApplication.shared.canOpenURL(url)
+        let finalURL = canOpen ? url : URL(string: "sssss://package/cn.zqbb.inject.manager")!
+        UIApplication.shared.open(finalURL, options: [:], completionHandler: nil)
+    }
+    private func gotoInstallMountApp() {
+        guard environment.interfaceMode.allowsExternalNavigation else { return }
+        let url = URL(string: "sileo://package/package/cn.zqbb.hello.mnt")!
+        let canOpen = UIApplication.shared.canOpenURL(url)
+        let finalURL = canOpen ? url : URL(string: "sssss://package/cn.zqbb.hello.mnt")!
+        UIApplication.shared.open(finalURL, options: [:], completionHandler: nil)
     }
 }
