@@ -661,7 +661,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -e\n. \"$SRCROOT/.env.sh\"\n/usr/bin/make -C \"$SRCROOT\" bootstrap-resources\n\"$SRCROOT/DevKit/Helpers/build-basebin-resources.sh\"\n/bin/mkdir -p \"${SCRIPT_OUTPUT_FILE_0%/*}\"\n/usr/bin/ditto \"$SRCROOT/build/BootstrapResources/bootstrap_1900.tar.zst\" \"$SCRIPT_OUTPUT_FILE_0\"\n/usr/bin/ditto \"$SRCROOT/build/BaseBinResources/basebin.tar\" \"$SCRIPT_OUTPUT_FILE_1\"\n/usr/bin/ditto \"$SRCROOT/build/BaseBinResources/basebin.tc\" \"$SCRIPT_OUTPUT_FILE_2\"\n/usr/bin/ditto \"$SRCROOT/build/BaseBinResources/libroot.deb\" \"$SCRIPT_OUTPUT_FILE_3\"\n/usr/bin/ditto \"$SRCROOT/build/BaseBinResources/libkrw-dopamine.deb\" \"$SCRIPT_OUTPUT_FILE_4\"\n/usr/bin/ditto \"$SRCROOT/build/BaseBinResources/basebin-link.deb\" \"$SCRIPT_OUTPUT_FILE_5\"\n/usr/bin/touch \"$SCRIPT_OUTPUT_FILE_6\"\n";
+			shellScript = "set -e\n. \"$SRCROOT/.env.sh\"\n\"$SRCROOT/DevKit/Helpers/build-basebin-resources.sh\"\n/bin/mkdir -p \"${SCRIPT_OUTPUT_FILE_0%/*}\"\n/usr/bin/ditto \"$SRCROOT/build/BootstrapResources/bootstrap_1900.tar.zst\" \"$SCRIPT_OUTPUT_FILE_0\"\n/usr/bin/ditto \"$SRCROOT/build/BaseBinResources/basebin.tar\" \"$SCRIPT_OUTPUT_FILE_1\"\n/usr/bin/ditto \"$SRCROOT/build/BaseBinResources/basebin.tc\" \"$SCRIPT_OUTPUT_FILE_2\"\n/usr/bin/ditto \"$SRCROOT/build/BaseBinResources/libroot.deb\" \"$SCRIPT_OUTPUT_FILE_3\"\n/usr/bin/ditto \"$SRCROOT/build/BaseBinResources/libkrw-dopamine.deb\" \"$SCRIPT_OUTPUT_FILE_4\"\n/usr/bin/ditto \"$SRCROOT/build/BaseBinResources/basebin-link.deb\" \"$SCRIPT_OUTPUT_FILE_5\"\n/usr/bin/touch \"$SCRIPT_OUTPUT_FILE_6\"\n";
 		};
 		50AA10303012A00000065F30 /* Prepare Exploit Dependencies */ = {
 			isa = PBXShellScriptBuildPhase;
